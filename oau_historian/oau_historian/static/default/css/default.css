@@ -1,0 +1,310 @@
+
+/*
+Design by Free CSS Templates
+http://www.freecsstemplates.org
+Released for free under a Creative Commons Attribution 2.5 License
+*/
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #544C40 url({{ STATIC_URL }}default/img/img01.jpg) repeat left top;
+	font-family: "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+	font-size: 13px;/* Controla el texto de la columna central */
+	color: #FFFFFF;/* Controla el color del texto de la columna central */
+}
+
+h1, h2, h3 {
+	margin-top: 0;
+}
+
+h1 {
+	font-size: 1.6em;
+	font-weight: normal;
+}
+
+h2 {
+	font-size: 1.6em;
+}
+
+h3 {
+	font-size: 1em;
+}
+
+ul {
+}
+
+a {
+	text-decoration: none;
+	color: #AF9371;
+}
+
+a:hover {
+	border-bottom: none;
+}
+
+a img {
+	border: none;
+}
+
+img.left {
+	float: left;
+	margin: 0 20px 0 0;
+}
+
+img.right {
+	float: right;
+	margin: 0 0 0 20px;
+}
+
+#header {
+	width: 1200px;
+	margin: 0 auto;
+	height: 188px;/* Se alarga el espacion entre el header y el cuerpo principal */
+	background: url({{ STATIC_URL }}default/img/img02.jpg) repeat-x left top;
+}
+
+/* Header */
+
+#logo {
+	width: 970px;
+	height: 150px;
+	margin: 0 auto;
+	padding: 0 10px;
+}
+
+#logo h1, #logo p {
+	float: left;
+	margin: 0;
+	color: #FFFFFF;
+}
+
+#logo h1 {
+	padding: 50px 0 0 0;  /* Controla la posicion de "Open Automation" */
+	#text-transform: lowercase;
+	text-transform: capitalize;
+	font-weight: normal;
+	font-size: 3em;
+}
+
+#logo p {
+	#text-transform: uppercase;
+	#text-transform: capitalize;
+	text-transform: none;
+	padding: 72px 0 0 3px;
+	font-size: 10px;
+	color: #110E0F;
+}
+
+#logo a {
+	border: none;
+	text-decoration: none;
+	color: #FFFFFF;
+}
+
+/* Menu */
+
+#menu {
+	width: 1200px; /* Controla la posicion horizontal del Menu */
+	margin: 0 auto;
+	padding: 0px 0;
+	height: 0px ;
+}
+
+#menu ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+#menu li {
+	display: inline;
+}
+
+#menu a {
+	display: block;
+	float: left;
+	margin: 0 3px 0 0;
+	padding: 6px 15px 10px 20px;
+	border-right: 1px #000000 solid; /* Controla el tamaño y color de barra que divide cada Menu */
+	text-decoration: none;
+	#text-transform: uppercase;
+	text-transform: capitalize;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;  /* Controla el tamaño de la letra del Menu */
+	color: #FFFFFF;
+}
+
+#menu a:hover {    /* Controla la posicion de los Menu cuando pasa por encima */
+	margin: 0 4px 0 0;
+	color: #3F3F00;
+}
+
+#menu .current_page_item a {
+	margin: 0 3px 0 0;
+	color: #775518;
+}
+
+#menu .current_page_item a:hover {
+	margin: 0 4px 0 0;
+	color: #775518;
+}
+
+/* Wrapper */
+
+#wrapper { /* La envoltura principal */
+}
+
+/* Page */
+
+#page {
+	width: 1200px; /* Controla el ancho de la columna central */
+	margin: 0 auto;
+	padding: 20px 0 0 0;
+	#background: #110E0F; /* Controla el color de la columna central original*/
+	background: #D3C6B0;
+}
+
+/* Content */
+
+#content {
+	float: left;
+	width: 900px;/* Controlamos el ancho del contenido central */
+	margin: 0px 0px 0px 20px;
+}
+
+#table {
+	width: 950px;  /* Controla el ancho de la tabla */
+	height: auto; /* Controla el alto de la tabla, original 200 px, luego auto*/
+	margin: 0px 0px 5px 0px;
+	padding: 1px 1px 1px 1px;
+	background: #8D6113; /* Controla el color de fondo de entre margin y padding */
+	color: #6A4B16;
+	border: 1px solid #8D6113;
+}
+
+#chart {
+	width: 950px;  /* Controla el ancho de la tabla */
+	height: 500px; /* Controla el alto de la tabla, original 200 px, luego auto*/
+	margin: 0px 0px 5px 0px;
+	padding: 1px 1px 1px 1px;
+	background: #8D6113; /* Controla el color de fondo de entre margin y padding */
+	color: #6A4B16;
+	border: 1px solid #8D6113;
+}
+
+.post {
+	padding-bottom: 15px;
+	line-height: 200%;
+}
+
+.post h1 {
+	font-weight: normal;
+}
+
+.title {
+	margin: 0;
+	padding: 10px 0 0 20px;
+	font-weight: normal;
+}
+
+.title a {
+	border-bottom: none;
+	color: #FFFFFF;
+}
+
+.title a:hover {
+	border-bottom: 1px dotted #000000;
+}
+
+.byline {
+	border-bottom: 2px solid #644611; /* Controla el ancho y color de la linea  */
+	margin: 10px 10px 10px 10px;
+}
+
+.error_msg {
+	background-color: red;
+	border: 1px solid black;
+	margin: 10px 10px 10px 10px;
+	text-align: center;
+}
+
+.entry {
+	padding: 0 20px;
+}
+
+.links {
+	padding: 4px 20px;
+	text-align: left;
+	font-weight: bold;
+	background: #000000;
+}
+
+.links a {
+	border: none;
+}
+
+.links a:hover {
+}
+
+/* Sidebars */
+
+#sidebar {
+	float: left;
+	width: 200px;  /* Controla el ancho de la tabla */
+	height: auto; /* Controla el alto de la tabla, original 200 px, luego auto*/
+}
+
+.sidebar ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sidebar li {
+	padding: 0 0 20px 0;
+}
+
+.sidebar li ul {
+}
+
+.sidebar li li {
+	margin: 0 20px 0 15px;
+	padding: 8px 0px;
+	border-bottom: 1px #423525 dashed;
+}
+
+
+.sidebar li h2 {
+	margin: 0 0 0 0;
+	padding: 5px 5px;
+	background: #815E22;
+	font-size: 13px;
+	color: #AF9371; /* Controla el color del texto de cada titulo de sidebars */
+}
+
+.sidebar a {
+	color: #815E22; /* Controla el color del texto de todo sidebars */
+}
+
+/* Footer */
+
+#footer {
+	width: 1200px;
+	height: 55px;
+	margin: 0 auto;
+	background: #514334;
+	border-top: 2px solid #423525;
+}
+
+#footer p {
+	margin: 0;
+	padding: 15px 0 0 0;
+	text-align: center;
+	font-size: smaller;
+	color: #FFFFFF;
+}
+
+#footer a {
+	color: #FFFFFF;
+}

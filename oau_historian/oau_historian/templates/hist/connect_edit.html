@@ -1,0 +1,25 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Configuracion OPC{% endblock %}
+	
+	{% block titlecontenido %}Configuracion OPC{% endblock %}
+	
+	{% block bylinecontenido %}Edita Conexion a Servidor OPC {% endblock %}
+	
+	{% block textlinkbylinecontenido %}OpenAutomation {% endblock %}
+	
+	{% block contenido %}
+
+	<form id='edit_connnect_form' method='post' action='' class="well">{% csrf_token %}
+		<table class="table">{{edit_connect_form}}</table>
+		<input type="submit" value="Guardar">		
+	</form>	
+
+	{% endblock %}
+	{% block titlecomentcontenido %}Configuracion OPC {% endblock %}
+	{% block comentcontenido %}Se debe definir los parametros de conexion OPC para cada Servidor {% endblock %}
+
+
+
+	
+

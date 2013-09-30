@@ -1,0 +1,14 @@
+{% extends "session.html" %}
+
+{% block title %}Nuevo Usuario{% endblock %}
+
+{% block titlecontenido %}OpenAutomation{% endblock %}{% block smalltitlecontenido %}Nuevo Usuario{% endblock %}
+
+{% block contenido %}
+
+	<form id='formulario' method='post' action='' class="well">{% csrf_token %}
+		<table  class="table">{{formulario}}</table>
+		<button type="submit" value='Registrar' class="btn btn-primary">Registrar</button>
+	</form>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Configuracion OPC{% endblock %}
+	
+	{% block titlecontenido %}Configuracion OPC{% endblock %}
+	
+	{% block bylinecontenido %}Ingreso de Parametros Cliente OPC {% endblock %}
+	
+	{% block textlinkbylinecontenido %} Open Automation{% endblock %}
+	
+	{% block contenido %}
+
+	<p><a href="/hist/connect/add" class="btn btn-small btn-primary">Agregar</a></p>
+
+	<body>
+		<!--<div id="table_div" style="height: 560px; width: 850px; color: #000000; font-size: 12pt" ></div>-->
+		<div id="table"></div>
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript">google.load('visualization', '1', {packages: ['table']});</script>
+		<script type="text/javascript">
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();	
+					data.addColumn('string', 'Conexion');			
+					data.addColumn('string', 'Gateway');
+					data.addColumn('string', 'Host');
+					data.addColumn('string', 'Server');
+					data.addColumn('string', 'Canal');
+					data.addColumn('string', 'Dispositivo');
+					data.addColumn('string', 'Tiempo Muestreo');
+					data.addColumn('string', 'Acciones');
+					data.addRows({{ qs|length }});					
+					{% for s in qs %}
+						data.setCell({{ forloop.counter0 }}, 0, '{{ s.connect }}');					
+						data.setCell({{ forloop.counter0 }}, 1, '{{ s.gate }}');
+						data.setCell({{ forloop.counter0 }}, 2, '{{ s.host }}');
+						data.setCell({{ forloop.counter0 }}, 3, '{{ s.server }}');
+						data.setCell({{ forloop.counter0 }}, 4, '{{ s.channel }}');
+						data.setCell({{ forloop.counter0 }}, 5, '{{ s.device }}');
+						data.setCell({{ forloop.counter0 }}, 6, '{{ s.sampletime }}');
+						data.setCell({{ forloop.counter0 }}, 7, '{{ s.id }}');
+					{% endfor %}
+					var formatter = new google.visualization.PatternFormat('<a href="/hist/connect/edit/{0}" class="btn btn-small btn-warning">Editar</a> <a href="/hist/connect/remove/{0}" class="btn btn-small btn-danger">Remover</a>');
+					formatter.format(data, [7, 1]); // Apply formatter and set the formatted value of the first column.					
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, {allowHtml: true, showRowNumber: false});
+			}
+			google.setOnLoadCallback(drawVisualization);
+		</script>
+	</body>
+	{% endblock %}
+	{% block titlecomentcontenido %}Configuracion OPC {% endblock %}
+	{% block comentcontenido %}Se debe definir los parametros de conexion OPC para cada Servidor {% endblock %}
+
+
+
+	
+

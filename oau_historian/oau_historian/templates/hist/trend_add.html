@@ -1,0 +1,20 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Configuracion Tendencias{% endblock %}
+	
+	{% block titlecontenido %}Configuracion Tendencias{% endblock %}
+	
+	{% block bylinecontenido %}Agrega Configuracion Tendencias {% endblock %}
+	
+	{% block textlinkbylinecontenido %}OpenAutomation {% endblock %}
+	
+	{% block contenido %}
+
+	<form id='trend_form' method='post' action='' class="well">{% csrf_token %}
+		<table class="table">{{ trend_form.as_p }}</table>
+		<input type="submit" value="Guardar">
+	</form>
+	
+	{% endblock %}
+	{% block titlecomentcontenido %}Configuracion Tendencias {% endblock %}
+	{% block comentcontenido %}Se debe definir una configuracion de tendencias para visualizar carta de historicos {% endblock %}

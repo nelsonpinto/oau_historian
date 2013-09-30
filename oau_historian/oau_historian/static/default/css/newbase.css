@@ -1,0 +1,158 @@
+body {
+    font-family: 'Andika', sans-serif;
+    background: url('/default/img/bg15.jpg') repeat-x white;
+    background-position-y: -40px;
+    overflow-y: scroll;
+}
+
+.well {
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5), inset 1px 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.logo span {
+    font-family: 'Andika', sans-serif;
+    color: #041a2f;
+    text-shadow: #a2a2a2 0.2em 0.2em 0.3em;
+    margin-left: 4em;
+    font-size: 1.2em;
+}
+
+.logo h1 {
+    font-size: 7em;
+    font-weight: 900;
+    color: #041a2f;
+    text-align: left;
+    font-family: 'Marck Script', cursive;
+    margin: 0.6em;
+    text-shadow: #5b82a6 0.02em 0.02em 0.1em;
+}
+
+.logo h1 a {
+    text-decoration: none;
+    color: #041a2f;
+}
+
+
+#session-box {
+    margin: 2em;
+    text-align: right;
+    font-family: 'Andika', sans-serif;
+    font-size: 0.9em;
+}
+
+.well form {
+    margin: 0em;
+}
+
+#session-box input {
+    margin: 4px 0px;
+    font-family: 'Andika', sans-serif;
+}
+
+#session-box button {
+    margin: 4px 0px;
+    margin-left: 8em;o
+}
+
+#main-content {
+    margin-top: 3em;
+    margin-bottom: 3em;
+    min-height: 400px;
+}
+
+#landing-box{
+    margin-bottom: 2em;
+}
+
+#landing-box input {
+    margin: 2px 0px;
+    font-family: 'Andika', sans-serif;
+}
+
+#landing-box strong {
+    margin-right: 2px;
+}
+
+#landing-box #follow-links {
+    text-decoration: none;
+}
+
+#landing-box #follow-links img {
+    vertical-align: middle;
+    margin: 16px 0px;
+}
+
+#landing-content dt {
+    font-size: 1.6em;
+}
+
+#landing-content dd { 
+    font-size: 1.1em;   
+    margin-bottom: 1.7em;
+    margin-top: 0.2em;
+}
+
+
+.console .cgreen {
+    color: #00FC2F;
+    font-weight: bold;
+}
+
+.console .cblue {
+    color: #7272E0;
+    font-weight: bold;
+}
+
+ul.console {
+    font-family: 'Inconsolata', courier;
+    font-size: 1.1em;
+    font-weight: 100;
+    line-height: 130%;
+
+    list-style-type: none;
+    background-color: black;
+    color: white;
+    padding: 1em;
+
+    border-radius: 10px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+
+/* Hide some elements */
+#docs, #create-user, #activate-user, #dashboard, #landing-thanks-email, #profile, #login-needed, #messages, #create-version {
+    display: none;
+}
+
+#main-content p {
+    font-family: 'Andika', sans-serif;
+}
+
+label, input, button, select, textarea {
+    font-family: 'Andika', "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+input {
+    font-size: 0.9em;
+}
+
+body > div.footer {
+    box-shadow: 0px -1px 2px rgba(0, 0, 0, 0.5), inset 0px 1px 1px rgba(255, 255, 255, 0.5);
+    text-align: center;
+    padding: 0.8em;
+    font-size: 0.9em;
+}
+
+/* Breadcrumb start invisible */
+.breadcrumb {
+    display: none;
+}
+
+/* Breaking lines classess */
+.break-all {
+    word-break: break-all;
+}
+
+.start-hidden {
+    display: none;
+}

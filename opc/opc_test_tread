@@ -1,0 +1,172 @@
+#!/usr/bin/python
+
+import thread
+import time
+
+# Define a function for the thread
+def print_time( threadName, delay, cycle):
+	count = 0
+   	while count < cycle:
+		time.sleep(delay)
+		count += 1
+		logger.info('Thread %s: %s' % (threadName, time.ctime(time.time())))
+
+# Create two threads as follows
+try:
+   thread.start_new_thread( print_time, ("Thread-1", 2, 10 ) )
+   thread.start_new_thread( print_time, ("Thread-2", 4, 10 ) )
+except:
+   print "Error: unable to start thread"
+
+while 1:
+   pass
+
+
+
+
+
+def opc_conn_scan_tag(connect, gate, host, server, channel, device, sampletime):
+
+	while True:
+		gate_opc = 0
+		try:
+			#logger.info('Conectando con Gateway OPC %s' % gate )
+			opc_conn = OpenOPC.open_client(gate)
+		except OpenOPC.OPCError, error_msg:
+			logger.error('Conectando con Gateway OPC %s' % error_msg)
+			gate_opc = 1
+			time.sleep(connectime)
+		finally:
+			if gate_opc == 0:
+				break
+	logger.info('Conectado a Gateway OPC %s' % opc_conn )
+
+	while True:
+		conn_opc = 0
+		try:
+			#logger.info('Conectando con Server/Host OPC %s %s' % (server,host))
+			opc_conn.connect(server,host)
+		except OpenOPC.OPCError, error_msg:
+			logger.error('Conectando con Server OPC %s' % error_msg)
+			conn_opc = 1
+			time.sleep(connectime)
+		finally:
+			if conn_opc == 0:
+				break
+	logger.info('Conectado a Server OPC %s Host %s' %(server,host))
+
+	while True:
+		status = 'running'
+		if scan_cycle >= 9999:
+			scan_cycle = 0
+		else:
+			scan_cycle = scan_cycle + 1
+		
+		pub_date=datetime.datetime.today()
+
+		sql_update_controller(pid,scan_cycle,status,pub_date)
+
+		tag = sql_select_tag_all() # se asume que ya esta creada la tabla tag
+
+		for tags in tag:
+			scan_opc = 0
+			try:
+				id				= tags[0]	#Id
+				connect			= tags[1]	#ForeignKey
+				name 			= tags[2]	#CharField
+				datatype 		= tags[3]	#CharField
+				snapshot 		= tags[4]	#CharField
+				history 		= tags[5]	#CharField
+				source 			= tags[6]	#CharField
+				prefix 			= tags[7]	#CharField
+				history_table	= tags[8]	#CharField
+
+				today = datetime.datetime.today()
+
+				if source == 'opc':
+
+					conn_name = channel+'.'+device+'.'+name
+					logger.info('conn_name %s' % conn_name)
+
+					try:
+						(opcvalue,opcstat,opctime) = opc_conn.read(conn_name)
+						logger.info('Reading OPC Server %s, tagname: %s, value: %0.1f, status: %s, datetime: %s' %(server,conn_name,opcvalue,opcstat,opctime))
+					except OpenOPC.OPCError, error_msg:
+						logger.error('Failed to Read %s' % error_msg)
+
+					if snapshot == 'true':
+						#evaluar si existe la tabla snapshot, si no crearla
+						if datatype == 'string':
+							sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+						elif datatype == 'bool':
+							sql_insert_bool('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+						elif datatype == 'int':
+							sql_insert_int('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hint(hist_tbls[0],opcvalue,opcstat,today)
+						elif datatype == 'float':
+							sql_insert_float('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+
+					elif snapshop == 'false':
+						if datatype == 'char':
+							if prefix != 'none':
+								prefixs = prefix.split()
+							filename = prefixs[0]
+							position = prefixs[1]
+							#print '%s %s' %(filename,position)
+							if int(position) == 1:
+								f = open('/home/ohm/string/%s' %filename, 'w')
+								f.write('%s' %str(unichr(int(opcvalue))))
+								f.close()
+							else:
+								f = open('/home/ohm/string/%s' %filename, 'a')
+								f.write('%s' %str(unichr(int(opcvalue))))
+								f.close()
+
+				elif source == 'calculate':
+					logger.info('Calculando variable, tag: %s' %(tag))
+					if snapshot == 'true':
+						if datatype == 'string':
+							nametag = tag.split(".") 	#divide tag en una lista de 3 element
+							filename = nametag[2]		#extrae 3 seccion de nombre de tag
+							try:
+								f = open('/home/ohm/string/%s' %filename, 'r') #extrae linea del archivo
+								opcvalue = f.readline()
+								f.close()
+							except:
+								logger.error('Obteniendo archivo %s' %(filename))
+							sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true': #evaluar si existe la tabla prefix_tag, si no crearla
+								hist_tbls = hist_tbl.split()
+								sql_insert_hstring(hist_tbls[0],opcvalue,opcstat,today)
+					
+			except:
+				logger.error('Reading OPC Server2 %s' % server)
+				scan_opc = 1
+
+	time.sleep(sampletime)
+
+
+
+
+			
+		if scan_opc != 0 or scan_sql != 0:
+			break
+
+		if scan_opc != 0:
+			scan_opc = 0
+			logger.error('Cerrando Conexion OPC')
+			try:
+				opc.close()
+			except:
+				logger.error('Falla Cerrando Conexion OPC')

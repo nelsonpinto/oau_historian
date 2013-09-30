@@ -1,0 +1,522 @@
+#!/usr/bin/python
+
+## DATE: 2011-12-27
+## AUTHOR: Nelson Pinto
+## WEBSITE: http://www.openautomation.cl
+## LICENSE: BSD http://www.opensource.org/licenses/bsd-license.php
+## Copyright 2011-present NPL
+
+# Python OpenOPC and PostgresSQL Prototype
+# OAU Historian PostgresSQL
+
+import sys
+import os
+import time
+import datetime
+import psycopg2
+import OpenOPC
+import logging
+from os import fork, chdir, setsid, umask
+from sys import exit
+
+import threading
+
+logger = logging.getLogger('ddOPC')
+logging.basicConfig(level=logging.DEBUG,
+						format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
+						datefmt='%b %d %H:%M:%S',
+						filename='/var/log/opc_gw.log',
+						filemode='w')
+
+scan_opc = 0
+scan_sql = 0
+conn_sql = 0
+ind_sql  = 1
+gate_opc = 0
+scan_cycle = 0
+status = 'stopped'
+connectime = 3
+pid = 0
+
+threadLock = threading.Lock()
+
+class myThread(threading.Thread):
+	def __init__(self,conn,cursor,connect_id,gate,host,server,channel,device,sampletime,name):
+		threading.Thread.__init__(self)
+		self.conn = conn 
+		self.cursor = cursor
+		self.connect_id = connect_id
+		self.gate = gate
+		self.host = host
+		self.server = server
+		self.channel = channel
+		self.device = device
+		self.sampletime = sampletime
+		self.name = name        
+	def run(self):
+		#threadLock.acquire()
+		opc_scan_tag(self.conn,self.cursor,self.connect_id,self.gate,self.host,self.server,self.channel,self.device,self.sampletime,self.name)
+		#threadLock.release()
+
+def sql_insert_controller_test(tag,pub_date):
+	try:
+		DATA = (tag,pub_date)
+		SQL = "INSERT INTO hist_test (tag,pub_date) VALUES (%s, %s)"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('INSERT INTO test >>> tag: %s, pub_date: %s' %(tag, pub_date))
+	except Exception, e:
+		logger.error('INSERT INTO test >>> %s' % e)
+
+def sql_insert_controller(pid,scan_cycle,status,pub_date):
+	try:
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "INSERT INTO hist_controller (pid,scan_cycle,status,pub_date) VALUES (%s, %s, %s, %s)"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('INSERT INTO hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+	except Exception, e:
+		logger.error('INSERT INTO hist_controller >>> %s' % e)
+
+def sql_update_controller(conn,cursor,pid,scan_cycle,status,pub_date):
+	try:
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "UPDATE hist_controller SET pid=%s, scan_cycle=%s, status=%s, pub_date=%s WHERE id=1"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('UPDATE hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+	except Exception, e:
+		logger.error('UPDATE hist_controller >>> %s' % e)
+
+def sql_select_tag_all(conn,cursor):
+	try:
+		SQL = "SELECT * FROM hist_tag ORDER BY id"
+		cursor.execute(SQL)
+		resultados = cursor.fetchall()
+		conn.commit()
+		#logger.info('SELECT hist_tag >>> all')
+		return resultados
+	except Exception, e:
+		logger.error('SELECT hist_tag >>> %s' % e)
+
+def sql_select_connection_all(conn,cursor):
+	try:
+		SQL = "SELECT * FROM hist_connection ORDER BY id"
+		cursor.execute(SQL)
+		resultados = cursor.fetchall()
+		conn.commit()
+		logger.info('SELECT hist_connection >>> all')
+		return resultados
+	except Exception, e:
+		logger.error('SELECT hist_connection >>> %s' % e)
+
+
+
+hist_snapshot
+def sql_insert_int(conn,cursor,tag,value,stat,pub_date,hist):
+	try:
+		sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+				VALUES(%s, %d, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+				tag = %s,\
+				value = %d,\
+				quality = %s,\
+				datetime = %s,\
+				history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSERT tabla: %s, tag: %s, value: %d' %(table,tag,value))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+
+
+
+
+hist_history
+def sql_insert_hist(conn,cursor,table,value,stat,pub_date):
+	try:
+		sqlstring = "INSERT INTO %s (value,quality,pub_date) VALUES(%0.1f, %s, %s) ON DUPLICATE KEY UPDATE value = %0.1f, quality = %s, pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSER tabla: %s, value: %0.1f, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+
+
+
+
+
+
+
+
+
+
+def sql_insert_hint(table,value,stat,pub_date):
+	scan_sql = 0
+	try:
+		sqlstring = "INSERT INTO %s (value,quality,pub_date) \
+				VALUES(%d, %s, %s) ON DUPLICATE KEY UPDATE \
+				value = %d,\
+				quality = %s,\
+				pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('UPDATE tabla: %s, value: %0.1f, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+	except psycopg2.DatabaseError, e:
+		logger.error('UPDATE tabla: %s' %e)
+		scan_sql = 1
+
+def sql_insert_hstring(table,value,stat,pub_date):
+	scan_sql = 0
+	try:
+		sqlstring = "INSERT INTO %s (value,quality,pub_date) \
+				VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE \
+				value = %s,\
+				quality = %s,\
+				pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSERT tabla: %s, value: %s, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+		scan_sql = 1
+
+def sql_insert_string(table,tag,value,stat,pub_date,hist):
+	scan_sql = 0
+	try:
+		sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+				VALUES(%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+				tag = %s,\
+				value = %s,\
+				quality = %s,\
+				datetime = %s, \
+				history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSERT tabla: %s, tag: %s, value: %s' %(table,tag,value))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+		scan_sql = 1
+
+def sql_insert_bool(table,tag,value,stat,pub_date,hist):
+	scan_sql = 0
+	try:
+		sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+				VALUES(%s, %d, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+				tag = %s,\
+				value = %d,\
+				quality = %s,\
+				datetime = %s,\
+				history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSERT tabla: %s, tag: %s, value: %d' %(table,tag,value))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+		scan_sql = 1
+
+
+
+def sql_insert_float(table,tag,value,stat,pub_date,hist):
+	scan_sql = 0
+	try:
+		sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+				VALUES(%s, %0.1f, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+				tag = %s,\
+				value = %0.1f,\
+				quality = %s,\
+				datetime = %s,\
+				history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('INSERT tabla: %s, tag: %s, value: %0.1f' %(table,tag,value))
+	except psycopg2.DatabaseError, e:
+		logger.error('INSERT tabla: %s' %e)
+		scan_sql = 1
+
+def sql_truncate(table):
+		
+	try:
+		sqlstring = "TRUNCATE %s" %table
+		#logger.info('sqlstring %s' %(sqlstring))
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('TRUNCATE tabla: %s' %table)
+	except psycopg2.DatabaseError, e:
+		logger.error('TRUNCATE tabla: %s' %e)
+
+def sql_alter(table,id):
+	try:
+		sqlstring = "ALTER TABLE %s AUTO_INCREMENT = %d" %(table,id)
+		#logger.info('sqlstring %s' %(sqlstring))
+		cursor.execute(sqlstring)
+		conn.commit()
+		logger.info('ALTER tabla: %s, %d' %(table,id))
+	except psycopg2.DatabaseError, e:
+		logger.error('ALTER tabla: %s' %e)
+
+def sql_select_id(table,index):
+	try:
+		sqlstring = "SELECT * FROM %s WHERE id = %d" %(table,index)
+		#logger.info('sqlstring %s' %(sqlstring))
+		cursor.execute(sqlstring)
+		resultados = cursor.fetchall()
+		conn.commit()
+		logger.info('SELECT tabla: %s' %table)
+		return resultados
+	except psycopg2.DatabaseError, e:
+		logger.error('SELECT tabla: %s' %e)
+
+def opc_scan_tag(conn,cursor,connect_id,gate,host,server,channel,device,sampletime,name):
+
+	name_thread = threading.currentThread().getName()
+	logger.info('Iniciando Thread Name: %s' % name_thread)
+	
+	while True:
+		gate_opc = 0
+		try:
+			#logger.info('Conectando con Gateway OPC %s' % gate )
+			opc_conn = OpenOPC.open_client(gate)
+		except Exception, e:
+			logger.error('Conectando con Gateway OPC Thread: %s, Error: %s' % (name_thread,e))
+			gate_opc = 1
+			time.sleep(connectime)
+		finally:
+			if gate_opc == 0:
+				break
+	logger.info('Conectado a Gateway OPC %s Thread: %s' % (opc_conn,name_thread))
+
+	while True:
+		conn_opc = 0
+		try:
+			#logger.info('Conectando con Server/Host OPC %s %s' % (server,host))
+			opc_conn.connect(server,host)
+		except Exception, e:
+			logger.error('Conectando con Server OPC Thread: %s, Error: %s' % (name_thread,e))
+			conn_opc = 1
+			time.sleep(connectime)
+		finally:
+			if conn_opc == 0:
+				break
+	logger.info('Conectado a Server OPC %s Host %s Thread Name: %s' %(server,host,name_thread))
+
+	while True:
+		status = 'running'
+		scan_tag = 0			
+		scan_cycle = 0
+
+		if scan_cycle >= 9999:
+			scan_cycle = 0
+		else:
+			scan_cycle = scan_cycle + 1
+			
+		pub_date=datetime.datetime.today()
+
+		try:
+			sql_update_controller(conn,cursor,pid,scan_cycle,status,pub_date)
+		except Exception, e:
+			logger.error('Actualizando controlador: %s, Error: %s' % (name_thread,e))
+
+		try:
+			tag = sql_select_tag_all(conn,cursor) # se asume que ya esta creada la tabla tag
+		except Exception, e:
+			logger.error('Leyendo tabla de tag: %s, Error: %s' % (name_thread,e))
+
+		for tags in tag:
+			try:
+				id				= tags[0]	#Id
+				connect			= tags[1]	#ForeignKey
+				name 			= tags[2]	#CharField
+				datatype 		= tags[3]	#CharField
+				snapshot 		= tags[4]	#CharField
+				history 		= tags[5]	#CharField
+				source 			= tags[6]	#CharField
+				prefix 			= tags[7]	#CharField
+				history_table	= tags[8]	#CharField			
+			except Exception, e:
+				logger.error('Move Data Tags %s' %e)
+
+			if connect_id == connect:
+
+				if source == 'opc':
+					conn_name = channel+'.'+device+'.'+name
+					try:
+						#today = datetime.datetime.today()
+						(opcvalue,opcstat,opctime) = opc_conn.read(conn_name)
+						logger.info('Reading OPC Server %s, tagname: %s, value: %0.1f, status: %s, datetime: %s, thread: %s' %(server,conn_name,opcvalue,opcstat,opctime,name_thread))
+					except OpenOPC.OPCError, error_msg:
+						logger.error('Failed to Read %s' % error_msg)
+						scan_tag = 1
+
+					if snapshot == 'true':
+						if datatype == 'int':
+							sql_insert_int(tag,opcvalue,opcstat,today,history)
+							
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								
+								sql_insert_hint(opcvalue,opcstat,today)
+
+
+
+
+
+						elif datatype == 'string':
+							sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+						elif datatype == 'bool':
+							sql_insert_bool('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+						elif datatype == 'float':
+							sql_insert_float('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true':
+								hist_tbls = hist_tbl.split()
+								sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+
+					elif snapshop == 'false':
+						if datatype == 'char':
+							if prefix != 'none':
+								prefixs = prefix.split()
+							filename = prefixs[0]
+							position = prefixs[1]
+							#print '%s %s' %(filename,position)
+							if int(position) == 1:
+								f = open('/home/ohm/string/%s' %filename, 'w')
+								f.write('%s' %str(unichr(int(opcvalue))))
+								f.close()
+							else:
+								f = open('/home/ohm/string/%s' %filename, 'a')
+								f.write('%s' %str(unichr(int(opcvalue))))
+								f.close()
+
+				elif source == 'calculate':
+					logger.info('Calculando variable, tag: %s' %(tag))
+					if snapshot == 'true':
+						if datatype == 'string':
+							nametag = tag.split(".") 	#divide tag en una lista de 3 element
+							filename = nametag[2]		#extrae 3 seccion de nombre de tag
+							try:
+								f = open('/home/ohm/string/%s' %filename, 'r') #extrae linea del archivo
+								opcvalue = f.readline()
+								f.close()
+							except:
+								logger.error('Obteniendo archivo %s' %(filename))
+							sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+							if history == 'true': #evaluar si existe la tabla prefix_tag, si no crearla
+								hist_tbls = hist_tbl.split()
+								sql_insert_hstring(hist_tbls[0],opcvalue,opcstat,today)
+
+
+
+					
+		time.sleep(sampletime)
+
+		if scan_tag != 0:
+			scan_tag = 0
+			logger.error('Cerrando Conexion OPC')
+			opc_conn.close()
+			break
+
+def main():	
+
+	while True:
+		pid = str(os.getpid())
+		logger.info('Proceso PID creado: %s' %pid)
+		f = open('/var/run/opc_gw.pid','w')
+		f.write('%s' %pid)
+		f.close()
+
+		while True:
+			conn_sql = 0
+			try:
+				logger.info('Conectando con Postgres')
+				conn = psycopg2.connect(database='oau_hist', user='postgres', password='post27', host='localhost')
+				cursor = conn.cursor()
+			except psycopg2.DatabaseError, e:
+				logger.error('Conectando con Postgres %s' % e )
+				conn_sql = 1
+				time.sleep(connectime)
+			finally:
+				if conn_sql == 0:
+					break		
+		logger.info('Conectado a Postgres %s' % conn)
+
+		while True:
+			connect_opc = 0
+			thread_opc = 0
+			try:
+				threads = list()				
+				connection = sql_select_connection_all(conn,cursor)
+
+				for connections in connection:
+					try:
+						id			= connections[0]	#Id
+						connect		= connections[1]	#ForeingKey
+						gate 		= connections[2]	#IPAddressField
+						host 		= connections[3]	#IPAddressField
+						server 		= connections[4]	#CharField
+						channel 	= connections[5]	#CharField
+						device		= connections[6]	#CharField
+						sampletime	= connections[7]	#IntegerField						
+						logger.info('Move table connect id=%s, connect=%s, gate=%s, host=%s, server=%s, channel=%s, device=%s, sampletime=%s' % (id,connect,gate,host,server,channel,device,sampletime))
+					except Exception, e:
+						logger.error('Move table connect %s' %e)
+					
+					try:
+						t = myThread(conn,cursor,id,gate,host,server,channel,device,sampletime=sampletime,name=connect)
+						t.start()
+						threads.append(t)
+						#t.join()
+					except Exception, e:
+						logger.error('Unable to start thread %s' %e)
+						thread_opc = 1
+					#finally:
+					#	if thread_opc == 0:
+					#		break
+
+			except Exception, e:
+				logger.error('Leyendo tabla connect %s' %e)
+				connect_opc = 1
+				time.sleep(connectime)
+
+			finally:
+				if connect_opc == 0:
+					break
+		logger.info('Thread Iniciadas')
+
+		while True:
+			time.sleep(20)
+			logger.info('Supervisa Thread, PID: %s' %pid)
+			
+			#mt = threading.currentThread()
+			#for th in threading.enumerate():
+			    # si es el hilo principal saltar o entraremos en deadlock
+			#    if th is mt:
+			#        continue
+			#    logger.debug('haciendo join a %s', th.getName())
+			#    th.join()
+
+			#if scan_sql != 0:
+			#	scan_sql = 0
+			#	try:
+			#		cursor.close()
+			#	except:
+			#		logger.error('Cerrando Conexion OPC')
+			#		logger.error('Cerrando Conexion SQL ')
+			#		logger.warning('Reiniciando Conexion Postgres SQL')
+ 
+if __name__ == "__main__":
+	try:
+		pid = fork()
+		if pid > 0:
+			exit(0)
+	except OSError, e:
+		exit(1)
+ 
+	chdir("/")
+	setsid()
+	umask(0)
+	main()

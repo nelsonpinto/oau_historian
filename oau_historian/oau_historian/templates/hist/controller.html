@@ -1,0 +1,41 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Controlador OPC{% endblock %}
+	
+	{% block titlecontenido %}Controlador OPC{% endblock %}
+	
+	{% block bylinecontenido %}Informacion de Proceso OpenOPC{% endblock %}
+	
+	{% block textlinkbylinecontenido %}OpenAutomation{% endblock %}
+	
+	{% block contenido %}
+	<body>
+		<!--<div id="table_div" style="height: 560px; width: 850px; color: #000000; font-size: 12pt" ></div>-->
+		<div id="table"></div>
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript">google.load('visualization', '1', {packages: ['table']});</script>
+		<script type="text/javascript">
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();
+				
+					data.addColumn('string', 'Proceso PID');
+					data.addColumn('string', 'Ciclos Scan');
+					data.addColumn('string', 'Estado');
+					data.addColumn('string', 'Fecha Publicacion');
+					data.addRows({{ qs|length }});
+					
+					{% for s in qs %}  
+						data.setCell({{ forloop.counter0 }}, 0, '{{ s.pid }}');
+						data.setCell({{ forloop.counter0 }}, 1, '{{ s.scan_cycle }}');
+						data.setCell({{ forloop.counter0 }}, 2, '{{ s.status }}');
+						data.setCell({{ forloop.counter0 }}, 3, '{{ s.pub_date }}');
+					{% endfor %}
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, {allowHtml:true} );
+			}
+			google.setOnLoadCallback(drawVisualization);
+		</script>
+	</body>
+	{% endblock %}
+	{% block titlecomentcontenido %}Controlador OPC{% endblock %}
+	{% block comentcontenido %} Se obtiene el estado del controlador ddOPC {% endblock %}

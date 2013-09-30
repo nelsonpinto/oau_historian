@@ -1,0 +1,113 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Tendencias Historicas{% endblock %}
+	
+	{% block titlecontenido %}Tendencias Historicas{% endblock %}
+	
+	{% block bylinecontenido %}Grafico de Tendencias Historicas{% endblock %}
+	
+	{% block textlinkbylinecontenido %}OpenAutomation {% endblock %}
+	
+	{% block contenido %}
+
+	<head>
+		<script type="text/javascript" src="http://www.google.com/jsapi?key={{ GOOGLE_API_KEY }}"></script>
+		<script type="text/javascript">google.load("visualization", "1", {packages:["corechart"]});</script>
+		<script type="text/javascript">google.load('visualization', '1', {packages:['charteditor']});</script>
+		<script type="text/javascript">google.load('visualization', '1', {packages:['table']});</script>
+		<script type="text/javascript">
+						
+			function drawChart() {
+		       var data = new google.visualization.DataTable();
+		        data.addColumn('string', 'none');
+		        data.addColumn('number', '{{ name }}');
+		        data.addRows({{ qs|length }});
+		        {% for s in qs %}  
+		          data.setValue({{ forloop.counter0 }}, 0, '{{ s.pub_date|date:"d M H:i:s"}}');
+		          data.setValue({{ forloop.counter0 }}, 1, {{ s.value }});
+		        {% endfor %}
+
+	        	wrapper = new google.visualization.ChartWrapper({
+          		chartType: 'LineChart',
+          		dataTable: data,
+          		options: {'title': '{{ name }}', 'color': 0010, 'valueLabelsInterval': 10, 'curveType': 'function', 'legend': 'top'},
+	          	containerId: 'visualization',	          	
+	        });
+	        wrapper.draw();
+	      	}
+	      	google.setOnLoadCallback(drawChart);
+
+			function openEditor() {
+				var editor = new google.visualization.ChartEditor();
+				google.visualization.events.addListener(editor, 'ok',
+				function() { 
+					wrapper = editor.getChartWrapper();  
+					wrapper.draw(document.getElementById('visualization'));
+				}); 
+				editor.openDialog(wrapper);
+			}
+			
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();
+					data.addColumn('string', 'Fecha Inicio');
+					data.addColumn('string', 'Fecha Final');
+					data.addColumn('string', 'Rango de Tiempo');
+					data.addColumn('string', 'Unidad de Tiempo');
+					data.addColumn('string', 'Seleccion Tiempo/Rango');
+					data.addColumn('string', 'Acciones');
+					data.addRows(1);			
+					
+					data.setCell(0, 0, '{{ qsx.start_date }}'); 
+					data.setCell(0, 1, '{{ qsx.end_date }}');
+					data.setCell(0, 2, '{{ qsx.date_range }}'); 
+					data.setCell(0, 3, '{{ qsx.unit_date }}');
+					data.setCell(0, 4, '{{ qsx.sel_range }}');
+					data.setCell(0, 5, '{{ qsx.id }}');
+							
+				var formatter = new google.visualization.PatternFormat('<a href="/hist/trend/edit/{{ id }}" class="btn btn-small btn-warning">Editar</a> <a ref="/hist/trend/remove/{0}" class="btn btn-small btn-danger">Remover</a>');
+					formatter.format(data, [5, 1]); // Apply formatter and set the formatted value of the first column.	
+
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, {allowHtml: true, showRowNumber: false});
+			}
+			google.setOnLoadCallback(drawVisualization);
+
+		</script>
+	</head> 
+
+	<style>
+	     #visualization {
+          margin-top: 10px;
+          margin-bottom: 10px;
+          padding: 0px;
+          height:500px;
+          width:970px;
+      	}
+      	#layouts {  
+          margin-top: 0px;
+          margin-bottom: 10px;
+          padding: 0px;  
+      	}
+      	#table {  
+          margin-top: 0px;
+          margin-bottom: 10px;
+          padding: 0px; 
+          height:55px;
+          width:970px;
+      	}
+    </style>
+
+    <section id="layouts">
+		<body style="font-family: Arial;border: 20 none;">
+			<input type='button' onclick='openEditor()' value='Open Editor' class="btn btn-small btn-primary">
+
+
+			<div id='visualization' style='visualization'></div>
+			<div id='table' style='visualization'></div>
+		</body>
+    </section>
+
+
+	{% endblock %}
+	{% block titlecomentcontenido %}Sistema de Tendencias Historicas {% endblock %}
+	{% block comentcontenido %}Visualizacion de Tendencias Historicas y Modificacion de Parametros de Ancho de carta {% endblock %}

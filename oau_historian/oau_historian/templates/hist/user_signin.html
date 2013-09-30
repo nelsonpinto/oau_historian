@@ -1,0 +1,12 @@
+{% extends "session.html" %}
+
+{% block title %}Ingreso{% endblock %}
+
+{% block titlecontenido %}OpenAutomation{% endblock %}{% block smalltitlecontenido %}Ingreso{% endblock %}
+
+{% block contenido %}
+	<form id='formulario' method='post' action='' class="well">{% csrf_token %}
+		<table class="table">{{formulario}}</table>
+		<button type="submit" value='Ingresar' class="btn btn-primary">Ingresar</button>    	
+	</form>
+{% endblock %}

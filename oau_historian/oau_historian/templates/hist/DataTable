@@ -1,0 +1,95 @@
+<style type='text/css'>
+  .bold-green-font {
+    font-weight: bold;
+    color: green;
+  }
+
+  .bold-font {
+    font-weight: bold;
+  }
+
+  .right-text {
+    text-align: right;
+  }
+
+  .large-font {
+    font-size: 15px;
+  }
+
+  .italic-darkblue-font {
+    font-style: italic;
+    color: darkblue;
+  }
+
+  .italic-purple-font {
+    font-style: italic;
+    color: purple;
+  }
+
+  .underline-blue-font {
+    text-decoration: underline;
+    color: blue;
+  }
+
+  .gold-border {
+    border: 3px solid gold;
+  }
+
+  .deeppink-border {
+    border: 3px solid deeppink;
+  }
+
+  .orange-background {
+    background-color: orange;
+  }
+
+  .orchid-background {
+    background-color: orchid;
+  }
+
+  .beige-background {
+    background-color: beige;
+  }
+
+</style>
+
+...
+
+function drawTable() {
+  var cssClassNames = {
+    'headerRow': 'italic-darkblue-font large-font bold-font',
+    'tableRow': '',
+    'oddTableRow': 'beige-background',
+    'selectedTableRow': 'orange-background large-font',
+    'hoverTableRow': '',
+    'headerCell': 'gold-border',
+    'tableCell': '',
+    'rowNumberCell': 'underline-blue-font'};
+
+  var options = {'showRowNumber': true, 'allowHtml': true, 'cssClassNames': cssClassNames};
+
+  var data = new google.visualization.DataTable();
+  data.addColumn('string', 'Name');
+  data.addColumn('number', 'Salary');
+  data.addColumn('boolean', 'Full Time');
+  data.addRows(5);
+  data.setCell(0, 0, 'John');
+  data.setCell(0, 1, 10000, '$10,000', {'className': 'bold-green-font large-font right-text'});
+  data.setCell(0, 2, true, {'style': 'background-color: red;'});
+  data.setCell(1, 0, 'Mary', null, {'className': 'bold-font'});
+  data.setCell(1, 1, 25000, '$25,000', {'className': 'bold-font right-text'});
+  data.setCell(1, 2, true, {'className': 'bold-font'});
+  data.setCell(2, 0, 'Steve', null, {'className': 'deeppink-border'});
+  data.setCell(2, 1, 8000, '$8,000', {'className': 'deeppink-border right-text'});
+  data.setCell(2, 2, false, null);
+  data.setCell(3, 0, 'Ellen', null, {'className': 'italic-purple-font large-font'});
+  data.setCell(3, 1, 20000, '$20,000');
+  data.setCell(3, 2, true);
+  data.setCell(4, 0, 'Mike');
+  data.setCell(4, 1, 12000, '$12,000');
+  data.setCell(4, 2, false);
+  var conatiner = document.getElementById('table');
+  var table = new google.visualization.Table(conatiner);
+  table.draw(data, options);
+  table.setSelection([{'row': 4}]);
+}

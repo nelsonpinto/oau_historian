@@ -1,0 +1,9 @@
+{% extends "session.html" %}
+
+{% block title %}Bienvenido{% endblock %}
+
+{% block titlecontenido %}OpenAutomation{% endblock %}{% block smalltitlecontenido %}Bienvenido{% endblock %}
+
+{% block contenido %}
+    <div class="alert alert-success"><small>Bienvenido {{user.username|upper}}, la última vez que ingreso fue el {{user.last_login}}. Eres miembro desde el {{user.date_joined}}</small></div>
+{% endblock %}

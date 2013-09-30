@@ -1,0 +1,76 @@
+{% load url from future %}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--Design by Free CSS Templates http://www.freecsstemplates.org-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>{% block title %}{% endblock %} Sistema Historicos y Reportes</title>
+	<meta name="keywords" content="" />
+	<meta name="Blend" content="" />
+	<link href="/media/blend/css/default.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+<body>
+<!-- start header -->
+<div id="header">
+	<div id="logo">
+		<h1><a href="#">OpenAutomation</a></h1>
+		<p>Sistema Tendencias Historicas y Reportes</p>
+	</div>
+	<div id="menu">
+		<ul id="main">
+			<li class="current_page_item" ><a href="/">Homepage</a></li>
+			<li><a href="/hist/snapshot/" >Tiempo Real/Hist</a></li>
+			<li><a href="/hist/connect/" >Conexiones</a></li>
+			<li><a href="/hist/controller/" >Controlador</a></li>
+			<li><a href="/hist/tag/" >Declaracion Tag</a></li>
+			<li><a href="/report/" >Reportes</a></li>
+		</ul>
+		<ul id="feed">
+			<li><a href="/admin/" >Administracion</a></li>
+		</ul>
+	</div>
+	
+</div>
+<!-- end header -->
+
+<div id="wrapper">
+	<!-- start page -->
+	<div id="page">
+		<div id="sidebar" class="sidebar">
+			<ul>
+				<li>
+					<h2>Reciente Link</h2>
+					<ul>
+						<li><a href="/hist/snapshot/" >Tiempo Real/Historicos</a></li>
+						<li><a href="/hist/connect/" >Conexiones</a></li>
+						<li><a href="/hist/controller/" >Controlador</a></li>
+						<li><a href="/hist/tag/" >Declaracion Tag</a></li>
+						<li><a href="/report/" >Reportes</a></li>
+						<li><a href="/admin/" >Administracion</a></li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+
+		<!-- start content -->
+		<div id="content">
+			<div class="post">
+				<h1 class="title"><a href="/">{% block titlecontenido %}{% endblock %}</a></h1>
+				<p class="byline"><small>{% block bylinecontenido %}{% endblock %}<a href="#">{% block textlinkbylinecontenido %}{% endblock %}</a></small></p>
+				{% block contenido %}{% endblock %}
+				<div class="entry">
+					<p><strong>{% block titlecomentcontenido %}{% endblock %}</strong>{% block comentcontenido %}{% endblock %}<a href="http://www.openautomation.cl/">Desarrolado por OpenAutomation</a></p>
+				</div>
+			</div>
+		</div>
+		<!-- end content -->
+		<div style="clear: both;">&nbsp;</div>
+	</div>
+	<!-- end page -->
+</div>
+<div id="footer">
+	<p>&copy;2013 All Rights Reserved. &nbsp;&bull;&nbsp; Design by<a href="http://www.openautomation.cl/"> OpenAutomation</a>.</p>
+</div>
+</body>
+</html>

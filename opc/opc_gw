@@ -1,0 +1,514 @@
+#!/usr/bin/python
+
+## DATE: 2011-12-27
+## AUTHOR: Nelson Pinto
+## WEBSITE: http://www.openautomation.cl
+## LICENSE: BSD http://www.opensource.org/licenses/bsd-license.php
+## Copyright 2011-present NPL
+
+# Python OpenOPC and PostgresSQL Prototype
+# OAU Historian PostgresSQL
+
+import sys
+import os
+import time
+import datetime
+import psycopg2
+import OpenOPC
+import logging
+from os import fork, chdir, setsid, umask
+from sys import exit
+
+try:
+	import cPickle as pickle
+except:
+	import pickle
+	import pprint
+
+import Queue
+
+
+def main():
+	
+	scan_opc = 0
+	scan_sql = 0
+	conn_sql = 0
+	ind_sql  = 1
+	connection_opc = 0
+	gate_opc = 0
+	conn_opc = 0
+	scan_cycle = 0
+	status = 'stopped'
+
+	#connect	= '1'
+	#gate 	= '192.168.0.14'
+	#host 	= '192.168.0.14'
+	#server = 'Kepware.KEPServerEX.V4'
+	#channel = 'ch1'
+	#device = 'dev'
+	#sampletime = '1'
+
+	#opcgate = '192.168.0.14'
+	#opchost = '192.168.0.14'
+	#opcserv = 'Kepware.KEPServerEX.V4'
+
+	connectime = 3
+	#sampletime = 2
+
+	logger = logging.getLogger('ddOPC')
+	logging.basicConfig(level=logging.DEBUG,
+						format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
+						datefmt='%b %d %H:%M:%S',
+						filename='/var/log/opc_gw.log',
+						filemode='w')
+
+	def sql_insert_test(tag,pub_date):
+		try:
+			DATA = (tag,pub_date)
+			SQL = "INSERT INTO hist_test (tag,pub_date) VALUES (%s, %s)"
+			cursor.execute(SQL, DATA)
+			conn.commit()
+			logger.info('INSERT INTO test >>> tag: %s, pub_date: %s' %(tag, pub_date))
+		except Exception, e:
+			logger.error('INSERT INTO test >>> %s' % e)
+
+	def sql_insert_controller(pid,scan_cycle,status,pub_date):
+		try:
+			DATA = (pid,scan_cycle,status,pub_date)
+			SQL = "INSERT INTO hist_controller (pid,scan_cycle,status,pub_date) VALUES (%s, %s, %s, %s)"
+			cursor.execute(SQL, DATA)
+			conn.commit()
+			logger.info('INSERT INTO hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+		except Exception, e:
+			logger.error('INSERT INTO hist_controller >>> %s' % e)
+
+	def sql_update_controller(pid,scan_cycle,status,pub_date):
+		try:
+			DATA = (pid,scan_cycle,status,pub_date)
+			SQL = "UPDATE hist_controller SET pid=%s, scan_cycle=%s, status=%s, pub_date=%s WHERE id=1"
+			cursor.execute(SQL, DATA)
+			conn.commit()
+			logger.info('UPDATE hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+		except Exception, e:
+			logger.error('UPDATE hist_controller >>> %s' % e)
+
+	def sql_select_tag_all():
+		try:
+			SQL = "SELECT * FROM hist_tag ORDER BY id"
+			cursor.execute(SQL)
+			resultados = cursor.fetchall()
+			conn.commit()
+			logger.info('SELECT hist_tag >>> all')
+			return resultados
+		except Exception, e:
+			logger.error('SELECT hist_tag >>> %s' % e)
+
+	def sql_select_connection_all():
+		try:
+			SQL = "SELECT * FROM hist_connection ORDER BY id"
+			cursor.execute(SQL)
+			resultados = cursor.fetchall()
+			conn.commit()
+			logger.info('SELECT hist_connection >>> all')
+			return resultados
+		except Exception, e:
+			logger.error('SELECT hist_connection >>> %s' % e)
+
+
+
+
+
+
+
+
+
+	
+	def sql_insert_hist(table,value,stat,pub_date):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (value,quality,pub_date) VALUES(%0.1f, %s, %s) ON DUPLICATE KEY UPDATE value = %0.1f, quality = %s, pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSER tabla: %s, value: %0.1f, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)	
+			scan_sql = 1
+
+	def sql_insert_hint(table,value,stat,pub_date):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (value,quality,pub_date) \
+					VALUES(%d, %s, %s) ON DUPLICATE KEY UPDATE \
+					value = %d,\
+					quality = %s,\
+					pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('UPDATE tabla: %s, value: %0.1f, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+		except psycopg2.DatabaseError, e:
+			logger.error('UPDATE tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_insert_hstring(table,value,stat,pub_date):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (value,quality,pub_date) \
+					VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE \
+					value = %s,\
+					quality = %s,\
+					pub_date = %s" %(table,value,stat,time,value,stat,pub_date)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSERT tabla: %s, value: %s, stat: %s, datatime: %s' %(table,value,stat,pub_date))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_insert_string(table,tag,value,stat,pub_date,hist):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+					VALUES(%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+					tag = %s,\
+					value = %s,\
+					quality = %s,\
+					datetime = %s, \
+					history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSERT tabla: %s, tag: %s, value: %s' %(table,tag,value))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_insert_bool(table,tag,value,stat,pub_date,hist):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+					VALUES(%s, %d, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+					tag = %s,\
+					value = %d,\
+					quality = %s,\
+					datetime = %s,\
+					history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSERT tabla: %s, tag: %s, value: %d' %(table,tag,value))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_insert_int(table,tag,value,stat,pub_date,hist):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+					VALUES(%s, %d, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+					tag = %s,\
+					value = %d,\
+					quality = %s,\
+					datetime = %s,\
+					history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSERT tabla: %s, tag: %s, value: %d' %(table,tag,value))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_insert_float(table,tag,value,stat,pub_date,hist):
+		scan_sql = 0
+		try:
+			sqlstring = "INSERT INTO %s (tag,value,quality,datetime,history) \
+					VALUES(%s, %0.1f, %s, %s, %s) ON DUPLICATE KEY UPDATE \
+					tag = %s,\
+					value = %0.1f,\
+					quality = %s,\
+					datetime = %s,\
+					history = %s" %(table,tag,value,stat,pub_date,hist,tag,value,stat,pub_date,hist)
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('INSERT tabla: %s, tag: %s, value: %0.1f' %(table,tag,value))
+		except psycopg2.DatabaseError, e:
+			logger.error('INSERT tabla: %s' %e)
+			scan_sql = 1
+
+	def sql_truncate(table):
+			
+		try:
+			sqlstring = "TRUNCATE %s" %table
+			#logger.info('sqlstring %s' %(sqlstring))
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('TRUNCATE tabla: %s' %table)
+		except psycopg2.DatabaseError, e:
+			logger.error('TRUNCATE tabla: %s' %e)
+
+	def sql_alter(table,id):
+		try:
+			sqlstring = "ALTER TABLE %s AUTO_INCREMENT = %d" %(table,id)
+			#logger.info('sqlstring %s' %(sqlstring))
+			cursor.execute(sqlstring)
+			conn.commit()
+			logger.info('ALTER tabla: %s, %d' %(table,id))
+		except psycopg2.DatabaseError, e:
+			logger.error('ALTER tabla: %s' %e)
+
+	def sql_select_id(table,index):
+		try:
+			sqlstring = "SELECT * FROM %s WHERE id = %d" %(table,index)
+			#logger.info('sqlstring %s' %(sqlstring))
+			cursor.execute(sqlstring)
+			resultados = cursor.fetchall()
+			conn.commit()
+			logger.info('SELECT tabla: %s' %table)
+			return resultados
+		except psycopg2.DatabaseError, e:
+			logger.error('SELECT tabla: %s' %e)
+
+
+
+	while True:
+		pid = str(os.getpid())
+		logger.info('Proceso PID creado: %s' %pid)
+		f=open('/var/run/opc_gw.pid','w')
+		f.write('%s' %pid)
+		f.close()
+
+		while True:
+			conn_sql = 0
+			try:
+				logger.info('Conectando con Postgres')
+				conn = psycopg2.connect(database='oau_hist', user='postgres', password='post27', host='localhost')
+				cursor = conn.cursor()
+			except psycopg2.DatabaseError, e:
+				logger.error('Conectando con Postgres %s' % e )
+				conn_sql = 1
+				time.sleep(connectime)
+			finally:
+				if conn_sql == 0:
+					break				
+		logger.info('Conectado a Postgres %s' % conn )
+
+		while True:
+			connected = {}
+			connection = sql_select_connection_all()
+			for connections in connection:
+				connection_opc = 0
+				try:
+					id			= connections[0]	#Id
+					connect		= connections[1]	#ForeingKey
+					gate 		= connections[2]	#IPAddressField
+					host 		= connections[3]	#IPAddressField
+					server 		= connections[4]	#CharField
+					channel 	= connections[5]	#CharField
+					device		= connections[6]	#CharField
+					sampletime	= connections[7]	#IntegerField
+					
+					logger.info('Lee tabla connect id=%s, connect=%s, gate=%s, host=%s, server=%s, channel=%s, device=%s, sampletime=%s' % (id,connect,gate,host,server,channel,device,sampletime))
+
+					while True:
+						gate_opc = 0
+						try:
+							#logger.info('Conectando con Gateway OPC %s' % gate )
+							opc_conn = OpenOPC.open_client(gate)
+						except:
+							logger.error('Conectando con Gateway OPC')
+							gate_opc = 1
+							time.sleep(connectime)
+						finally:
+							if gate_opc == 0:
+								break
+					logger.info('Conectado a Gateway OPC %s' % opc_conn )
+
+					while True:
+						conn_opc = 0
+						try:
+							#logger.info('Conectando con Server/Host OPC %s %s' % (server,host))
+							opc_conn.connect(server,host)
+						except:
+							logger.error('Conectando con Server OPC')
+							conn_opc = 1
+							time.sleep(connectime)
+						finally:
+							if conn_opc == 0:
+								break
+					logger.info('Conectado a Server OPC %s Host %s' %(server,host))
+
+					#Guardan objetos de conexiones
+					filename = 'conn.'+str(id)
+					with open('%s' % filename, 'wb') as fp:
+						pickle.dump(opc_conn, fp)
+					
+					#Diccionario de conexiones
+					connected[id] = channel+'.'+device
+					#logger.info('Conexiones %s' % connected)
+					#logger.info('Opc_conn %s' % opc_conn)
+					#logger.info('filename %s' % filename)
+
+				except:
+					logger.error('Leyendo tabla connect')
+					connection_opc = 1
+				finally:
+					time.sleep(connectime)
+					
+			if connection_opc == 0:
+				break
+
+		while True:
+			status = 'running'
+			if scan_cycle >= 9999:
+				scan_cycle = 0
+			else:
+				scan_cycle = scan_cycle + 1
+			
+ 			pub_date=datetime.datetime.today()
+ 			#sql_insert_test('opc_test',pub_date)
+ 			
+ 			#sql_insert_controller(pid,scan_cycle,status,pub_date)
+ 			sql_update_controller(pid,scan_cycle,status,pub_date)
+
+			#sql_truncate('opc_controller')
+			#sql_alter('hist_controller',1) # se asume que ya esta creada la tabla controller
+			
+			#sql_truncate('opc_snapshot')
+			#sql_alter('hist_snapshot',1) # se asume que ya esta creada la tabla snapshot
+
+
+			tag = sql_select_tag_all() # se asume que ya esta creada la tabla tag
+			for tags in tag:
+				scan_opc = 0
+				try:
+					id				= tags[0]	#Id
+					connect			= tags[1]	#ForeignKey
+					name 			= tags[2]	#CharField
+					datatype 		= tags[3]	#CharField
+					snapshot 		= tags[4]	#CharField
+					history 		= tags[5]	#CharField
+					source 			= tags[6]	#CharField
+					prefix 			= tags[7]	#CharField
+					history_table	= tags[8]	#CharField
+
+					today = datetime.datetime.today()
+
+					if source == 'opc':
+
+						for conn_id in connected.keys():
+							logger.info('Conexion %s, Key %s' % (connected[conn_id],conn_id))
+
+						#Extraen Objetos de conexiones
+						conn_name = connected[connect]+'.'+name
+						logger.info('conn_name %s' % conn_name)
+
+						#Extraen Objetos de conexiones
+						filename = 'conn.'+str(connect)
+						with open('%s' % filename, 'rb') as fp:
+							opc = pickle.load(fp)
+
+						logger.info('filename %s' % filename)
+						logger.info('opc_conn %s' % opc)
+
+						try:
+							(opcvalue,opcstat,opctime) = opc.read(conn_name)
+							logger.info('Reading OPC Server %s, tagname: %s, value: %0.1f, status: %s, datetime: %s' %(server,conn_name,opcvalue,opcstat,opctime))
+						except OpenOPC.OPCError, error_msg:
+							logger.error('Failed to Read %s' % error_msg)
+
+						exit(1)
+
+						if snapshot == 'true':
+							#evaluar si existe la tabla snapshot, si no crearla
+							if datatype == 'string':
+								sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+								if history == 'true':
+									hist_tbls = hist_tbl.split()
+									sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+							elif datatype == 'bool':
+								sql_insert_bool('opc_snapshot',tag,opcvalue,opcstat,today,history)
+								if history == 'true':
+									hist_tbls = hist_tbl.split()
+									sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+							elif datatype == 'int':
+								sql_insert_int('opc_snapshot',tag,opcvalue,opcstat,today,history)
+								if history == 'true':
+									hist_tbls = hist_tbl.split()
+									sql_insert_hint(hist_tbls[0],opcvalue,opcstat,today)
+							elif datatype == 'float':
+								sql_insert_float('opc_snapshot',tag,opcvalue,opcstat,today,history)
+								if history == 'true':
+									hist_tbls = hist_tbl.split()
+									sql_insert_hist(hist_tbls[0],opcvalue,opcstat,today)
+
+						elif snapshop == 'false':
+							if datatype == 'char':
+								if prefix != 'none':
+									prefixs = prefix.split()
+								filename = prefixs[0]
+								position = prefixs[1]
+								#print '%s %s' %(filename,position)
+								if int(position) == 1:
+									f = open('/home/ohm/string/%s' %filename, 'w')
+									f.write('%s' %str(unichr(int(opcvalue))))
+									f.close()
+								else:
+									f = open('/home/ohm/string/%s' %filename, 'a')
+									f.write('%s' %str(unichr(int(opcvalue))))
+									f.close()
+
+					elif source == 'calculate':
+						logger.info('Calculando variable, tag: %s' %(tag))
+						if snapshot == 'true':
+							if datatype == 'string':
+								nametag = tag.split(".") 	#divide tag en una lista de 3 element
+								filename = nametag[2]		#extrae 3 seccion de nombre de tag
+								try:
+									f = open('/home/ohm/string/%s' %filename, 'r') #extrae linea del archivo
+									opcvalue = f.readline()
+									f.close()
+								except:
+									logger.error('Obteniendo archivo %s' %(filename))
+								sql_insert_string('opc_snapshot',tag,opcvalue,opcstat,today,history)
+								if history == 'true': #evaluar si existe la tabla prefix_tag, si no crearla
+									hist_tbls = hist_tbl.split()
+									sql_insert_hstring(hist_tbls[0],opcvalue,opcstat,today)
+						
+				except:
+					logger.error('Reading OPC Server2 %s' % server)
+					scan_opc = 1
+
+				time.sleep(sampletime)
+				
+			if scan_opc != 0 or scan_sql != 0:
+				break
+				
+		if scan_sql != 0:
+			scan_sql = 0
+			logger.error('Cerrando Conexion SQL ')
+			try:
+				cursor.close()
+				conn.close()
+			except:
+				logger.error('Falla Cerrando Conexion SQL')
+
+		if scan_opc != 0:
+			scan_opc = 0
+			logger.error('Cerrando Conexion OPC')
+			try:
+				opc.close()
+			except:
+				logger.error('Falla Cerrando Conexion OPC')
+		
+		logger.warning('Reiniciando Conexion Postgres SQL, OPC Gateway')
+ 
+if __name__ == "__main__":
+	try:
+		pid = fork()
+		if pid > 0:
+			exit(0)
+	except OSError, e:
+		exit(1)
+ 
+	chdir("/")
+	setsid()
+	umask(0)
+
+	main()

@@ -1,0 +1,269 @@
+#!/usr/bin/python
+
+## DATE: 2011-12-27
+## AUTHOR: Nelson Pinto
+## WEBSITE: http://www.openautomation.cl
+## LICENSE: BSD http://www.opensource.org/licenses/bsd-license.php
+## Copyright 2011-present NPL
+
+# Python OpenOPC and PostgresSQL Prototype
+# OAU Historian PostgresSQL
+
+import sys
+import os
+import time
+import datetime
+import psycopg2
+import OpenOPC
+import logging
+from os import fork, chdir, setsid, umask
+from sys import exit
+
+import threading
+
+scan_opc = 0
+scan_sql = 0
+conn_sql = 0
+ind_sql  = 1
+#connection_opc = 0
+gate_opc = 0
+scan_cycle = 0
+status = 'stopped'
+
+connectime = 3
+
+logger = logging.getLogger('ddOPC')
+logging.basicConfig(level=logging.DEBUG,
+						format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
+						datefmt='%b %d %H:%M:%S',
+						filename='/var/log/opc_gw.log',
+						filemode='w')
+
+
+class Thread_Opc(threading.Thread):
+	def run(self):
+		logger.info('Iniciando Thread: %s' % self.getName())
+
+
+def sql_insert_test(tag,pub_date):
+	try:
+		DATA = (tag,pub_date)
+		SQL = "INSERT INTO hist_test (tag,pub_date) VALUES (%s, %s)"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('INSERT INTO test >>> tag: %s, pub_date: %s' %(tag, pub_date))
+	except Exception, e:
+		logger.error('INSERT INTO test >>> %s' % e)
+
+def sql_insert_controller(pid,scan_cycle,status,pub_date):
+	try:
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "INSERT INTO hist_controller (pid,scan_cycle,status,pub_date) VALUES (%s, %s, %s, %s)"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('INSERT INTO hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+	except Exception, e:
+		logger.error('INSERT INTO hist_controller >>> %s' % e)
+
+def sql_update_controller(pid,scan_cycle,status,pub_date):
+	try:
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "UPDATE hist_controller SET pid=%s, scan_cycle=%s, status=%s, pub_date=%s WHERE id=1"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+		#logger.info('UPDATE hist_controller >>> pid: %s, scan_cycle: %s, status: %s, pub_date: %s' %(pid,scan_cycle,status,pub_date))
+	except Exception, e:
+		logger.error('UPDATE hist_controller >>> %s' % e)
+
+def sql_select_tag_all():
+	try:
+		SQL = "SELECT * FROM hist_tag ORDER BY id"
+		cursor.execute(SQL)
+		resultados = cursor.fetchall()
+		conn.commit()
+		#logger.info('SELECT hist_tag >>> all')
+		return resultados
+	except Exception, e:
+		logger.error('SELECT hist_tag >>> %s' % e)
+
+def sql_select_connection_all():
+	try:
+		SQL = "SELECT * FROM hist_connection ORDER BY id"
+		cursor.execute(SQL)
+		resultados = cursor.fetchall()
+		conn.commit()
+		#logger.info('SELECT hist_connection >>> all')
+		return resultados
+	except Exception, e:
+		logger.error('SELECT hist_connection >>> %s' % e)
+
+
+
+
+
+
+
+def opc_scan_tag(connect_id, gate, host, server, channel, device, sampletime):
+
+	#name_thread = threading.currentThread().getName()
+	#logger.info('Iniciando Thread Conexion: %s' % name_thread)
+	while True:
+		gate_opc = 0
+		try:
+			#logger.info('Conectando con Gateway OPC %s' % gate )
+			opc_conn = OpenOPC.open_client(gate)
+		except OpenOPC.OPCError, error_msg:
+			logger.error('Conectando con Gateway OPC %s on Thread: %s Error: %s' % (opc_conn,name_thread,error_msg))
+			gate_opc = 1
+			time.sleep(connectime)
+		finally:
+			if gate_opc == 0:
+				break
+	logger.info('Conectado a Gateway OPC %s on Thread: %s' % (opc_conn,name_thread))
+
+	while True:
+		conn_opc = 0
+		try:
+			#logger.info('Conectando con Server/Host OPC %s %s' % (server,host))
+			opc_conn.connect(server,host)
+		except OpenOPC.OPCError, error_msg:
+			logger.error('Conectando con Server OPC %s on Thread: %s Error: %s' % (opc_conn,name_thread,error_msg))
+			conn_opc = 1
+			time.sleep(connectime)
+		finally:
+			if conn_opc == 0:
+				break
+	logger.info('Conectado a Server OPC %s Host %s on Thread: %s' %(server,host,name_thread))
+
+	while True:
+		status = 'running'
+		scan_tag = 0			
+		scan_cycle = 0
+
+		if scan_cycle >= 9999:
+			scan_cycle = 0
+		else:
+			scan_cycle = scan_cycle + 1
+		
+		pub_date=datetime.datetime.today()
+
+		sql_update_controller(pid,scan_cycle,status,pub_date)
+
+		tag = sql_select_tag_all() # se asume que ya esta creada la tabla tag
+
+		for tags in tag:
+			try:
+				#id				= tags[0]	#Id
+				connect			= tags[1]	#ForeignKey
+				name 			= tags[2]	#CharField
+				#datatype 		= tags[3]	#CharField
+				#snapshot 		= tags[4]	#CharField
+				#history 		= tags[5]	#CharField
+				source 			= tags[6]	#CharField
+				#prefix 			= tags[7]	#CharField
+				#history_table	= tags[8]	#CharField			
+			except Exception, e:
+				logger.error('Move Data Tags %s' %e)
+
+			#logger.info('connect %s connect_id %s' %(connect,connect_id))
+			if connect_id == connect:
+
+				if source == 'opc':
+					conn_name = channel+'.'+device+'.'+name
+					#logger.info('conn_name %s' % conn_name)
+					try:
+						#today = datetime.datetime.today()
+						(opcvalue,opcstat,opctime) = opc_conn.read(conn_name)
+						logger.info('Reading OPC Server %s, tagname: %s, value: %0.1f, status: %s, datetime: %s' %(server,conn_name,opcvalue,opcstat,opctime))
+					except OpenOPC.OPCError, error_msg:
+						logger.error('Failed to Read %s' % error_msg)
+						scan_tag = 1
+					finally:
+						if scan_tag == 0:
+							break
+
+		time.sleep(sampletime)
+
+		if scan_tag != 0:
+			scan_tag = 0
+			logger.error('Cerrando Conexion OPC')
+			opc_conn.close()
+			break
+
+
+while True:
+#	pid = str(os.getpid())
+#	logger.info('Proceso PID creado: %s' %pid)
+#	f=open('/var/run/opc_gw.pid','w')
+#	f.write('%s' %pid)
+#	f.close()
+
+	while True:
+		conn_sql = 0
+		try:
+			logger.info('Conectando con Postgres')
+			conn = psycopg2.connect(database='oau_hist', user='postgres', password='post27', host='localhost')
+			cursor = conn.cursor()
+		except psycopg2.DatabaseError, e:
+			logger.error('Conectando con Postgres %s' % e )
+			conn_sql = 1
+			time.sleep(connectime)
+		finally:
+			if conn_sql == 0:
+				break		
+	logger.info('Conectado a Postgres %s' % conn)
+			
+	while True:
+		try:
+			threads = list()				
+			connect_opc = 0
+			connection = sql_select_connection_all()
+
+			for connections in connection:
+				try:
+					id			= connections[0]	#Id
+					connect		= connections[1]	#ForeingKey
+					gate 		= connections[2]	#IPAddressField
+					host 		= connections[3]	#IPAddressField
+					server 		= connections[4]	#CharField
+					channel 	= connections[5]	#CharField
+					device		= connections[6]	#CharField
+					sampletime	= connections[7]	#IntegerField
+					
+					logger.info('Read table connect id=%s, connect=%s, gate=%s, host=%s, server=%s, channel=%s, device=%s, sampletime=%s' % (id,connect,gate,host,server,channel,device,sampletime))
+				except Exception, e:
+					logger.error('Read table connect %s' %e)
+
+				thread_opc = 0
+				try:
+				    t = threading.Thread(target=opc_scan_tag, args=(id,gate,host,server,channel,device,sampletime,), name=connect)
+				    threads.append(t)
+				    t.start()
+				    #t.join()
+				except Exception, e:
+					logger.error('Unable to start thread %s' %e)
+					thread_opc = 1
+
+		except Exception, e:
+			logger.error('Leyendo tabla connect %s' %e)
+			connect_opc = 1
+		finally:
+			if connect_opc == 0:
+				break
+	logger.info('Thread Started')
+
+	while True:
+		time.sleep(connectime)
+		#logger.info('Supervisa Thread, PID: %s' %pid)
+
+		if scan_sql != 0:
+			scan_sql = 0
+			try:
+				cursor.close()
+			except:
+				logger.error('Cerrando Conexion OPC')
+				logger.error('Cerrando Conexion SQL ')
+				logger.warning('Reiniciando Conexion Postgres SQL')
+ 
+#if __name__ == "__main__":
+#	main()

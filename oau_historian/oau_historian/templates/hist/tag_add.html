@@ -1,0 +1,25 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Tag OPC{% endblock %}
+	
+	{% block titlecontenido %}Tag OPC{% endblock %}
+	
+	{% block bylinecontenido %}Declaracion de Tag{% endblock %}
+	
+	{% block textlinkbylinecontenido %}Open Automation {% endblock %}
+	
+	{% block contenido %}
+
+	<form id='tag_form' method='post' action='' class="well">{% csrf_token %}
+		<table class="table">{{tag_form}}</table>
+		<input type="submit" value="Guardar">
+	</form>	
+
+	{% endblock %}
+	{% block titlecomentcontenido %}Configuracion OPC {% endblock %}
+	{% block comentcontenido %}Se debe definir los parametros de conexion OPC para cada Servidor {% endblock %}
+
+
+
+	
+

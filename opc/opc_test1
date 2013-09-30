@@ -1,0 +1,64 @@
+#!/usr/bin/python
+
+import sys
+import os
+import time
+import psycopg2
+from sys import exit
+import datetime
+
+conn = None
+cursor = None
+
+def sql_insert_test(tag,pub_date):
+	try:
+		DATA = (tag,pub_date)
+		SQL = "INSERT INTO hist_test (tag,pub_date) VALUES (%s, %s)"
+		#print 'SQL %s' % SQL
+		cursor.execute(SQL, DATA)
+		print 'SQL %s' % SQL
+		conn.commit()
+	except Exception, e:
+	#except psycopg2.DatabaseError, e:
+		print 'Error %s' % e
+
+
+def sql_update_controller(pid,scan_cycle,status,pub_date):
+	try:            
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "UPDATE hist_controller SET pid=%s, scan_cycle=%s, status=%s, pub_date=%s WHERE id=1"
+		print 'SQL %s' % SQL
+		cursor.execute(SQL, DATA)
+		conn.commit()
+	except Exception, e:
+	#except psycopg2.DatabaseError, e:
+		print 'Error %s' % e
+
+def sql_insert_controller(pid,scan_cycle,status,pub_date):
+	try:
+		DATA = (pid,scan_cycle,status,pub_date)
+		SQL = "INSERT INTO hist_controller (pid,scan_cycle,status,pub_date) VALUES (%s, %s, %s, %s)"
+		cursor.execute(SQL, DATA)
+		conn.commit()
+	except Exception, e:
+	#except psycopg2.DatabaseError, e:
+		print 'Error %s' % e
+
+try:
+	conn = psycopg2.connect(database='oau_hist', user='postgres', password='post27', host='localhost')
+	cursor = conn.cursor()
+	#sql_update_controller('456',30100,'good')
+	#today = datetime.date.today()
+	#print today
+	pub_date = datetime.datetime.today()
+	#print pub_date
+	#sql_insert_controller('456',4567,'good',pub_date)
+	sql_insert_test('opc_test1',pub_date)
+	#sql_update_controller('456',30100,'good',pub_date)
+
+except:
+	print 'Errores'
+	sys.exit(1)
+finally:
+	if conn:
+		conn.close()

@@ -1,0 +1,167 @@
+{% load url from future %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %} Historian</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->    
+    <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}default/css/oau.css" rel="stylesheet">
+    
+    <style>
+      body {
+        padding-top: 0px; /* 60px to make the container go all the way to the bottom of the topbar */
+        font-family: 'Andika', sans-serif;
+        background: url('{{ MEDIA_URL }}default/img/fondos/fond16.jpg') repeat-x white;
+        background-position-y: 40px;
+        overflow-y: scroll;*/
+      }
+
+      #layouts {  
+          margin-top: 30px;
+          margin-bottom: 30px;
+          padding: 0px;  
+      }
+
+    </style>
+
+    <link rel="shortcut icon" href="{{ MEDIA_URL }}default/ico/openautomation.png">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ STATIC_URL }}bootstrap/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{{ STATIC_URL }}bootstrap/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{{ STATIC_URL }}bootstrap/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="{{ STATIC_URL }}bootstrap/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+        	
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          
+          <a class="brand" href="/">OpenAutomation</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+               <li class="divider-vertical"></li>
+               <!--<li class="active"><a href="/home">Home</a></li>-->
+               <li><a href="/">Homepage</a></li>
+               
+               <li class="divider-vertical"></li>
+               <li><a href="/hist/snapshot/" >Real/Historico</a></li>
+               
+               <li class="divider-vertical"></li>
+               <li><a href="/hist/connect/" >Conexiones</a></li>
+               
+               <li class="divider-vertical"></li>
+               <li><a href="/hist/tag/" >Tag</a></li>
+
+               <li class="divider-vertical"></li>
+               <li><a href="/hist/controller/" >Controlador</a></li>
+
+               <li class="divider-vertical"></li>
+               <li><a href="/report/" >Reportes</a></li>
+
+               <li class="divider-vertical"></li>
+               <li><a href="/admin">Administracion</a></li>               
+               
+               <li class="divider-vertical"></li>
+               <li class="dropdown">
+                
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Menu Rapido<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+	             <li><a href="/">Homepage</a></li>
+	             <li><a href="/hist/snapshot/">Real/Historico</a></li>
+	             <li><a href="/hist/connect/">Conexiones</a></li>
+	             <li><a href="/hist/tag/">Tag</a></li>
+               
+	             <li><a href="/hist/controller/">Controlador</a></li>
+	             <li><a href="/report/">Reportes</a></li>
+	             
+	             <li class="divider"></li>
+	             <li><a href="/admin">Administracion</a></li>
+                </ul>
+               </li>
+ 			         <form class="navbar-search pull-left" action="">
+               <input type="text" class="search-query span1" placeholder="Search">
+              </form>
+            </ul>
+          </div><!--/.nav-collapse -->
+          
+          <!-- Agrega boton de Username -->
+          <div class="btn-group pull-right">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+              <i class="icon-user"></i> {{user}}
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="/user/signin">Sign in</a></li>
+              <li><a href="/user/signout">Sign out</a></li>
+              <!--<li class="divider"></li>-->
+              <li><a href="/user/createaccount">Create account</a></li>
+            </ul>
+          </div>
+        </div><!-- container -->
+      </div>
+    </div>
+
+    <div class="container">
+
+  	  <div class="row"> 
+        <div class="span10">
+
+          <section id="layouts">
+            <div class="row">
+              <div class="span10">
+                   
+                  
+                <div class="bs-docs-example">
+                  <div class="alert alert-block alert-error fade in">
+                    <button type="button" class="close" data-dismiss="alert">×</button>
+                    <h4 class="alert-heading">{% block titlecontenido %}{% endblock %}</h4>
+                    <p>
+                      {% block contenido %}{% endblock %}
+                    </p>
+                    {% block acciones %}{% endblock %}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+          
+          <div class="tooltip-demo well">
+            <p class="muted" style="margin-bottom: 0;">
+              Este WebSite fue desarrollado por OpenAutomation sobre <a href="https://www.djangoproject.com/" rel="tooltip" title="FrameWorks Django-Python"> Django</a> y <a href="http://twitter.github.com/bootstrap/" rel="tooltip" title="HTML, CSS y Javascript simple y flexible para componentes e interacciones de interfaz de usuarios populares"> Bootstrap-Twitter</a><br>
+            </p>
+          </div>
+
+          <footer>
+            <p>&copy; OpenAutomation S.A. 2013</p>
+          </footer>
+      	        
+        </div> <!--span10-->
+      </div> <!--close row-->
+    
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>    
+    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}bootstrap/js/bootstrap-min.js"></script>
+  </body>
+</html>

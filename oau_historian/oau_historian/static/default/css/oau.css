@@ -1,0 +1,100 @@
+
+/*
+Design by OAU S.A. Nelson Pinto
+#47494b gris
+#6199df azul
+#68f442 verde
+
+
+.general-box {
+background-color:#fbf80e;
+border:1px solid #76a045;
+list-style:disc;
+padding-left:0px;
+margin:0px 0px 20px 0px;
+}
+
+.market-box {
+background-color:#68f442;
+border:1px solid #76a045;
+list-style:disc;
+padding-left:0px;
+margin:0px 0px 20px 0px;
+}
+
+.round-9 {
+-webkit-border-radius:9px;
+-moz-border-radius:9px;
+border-radius:9px
+}
+
+.side-head {
+background-clip:padding-box;
+background-color:#050505;
+margin:0px;
+padding:7px;
+text-align:center; 
+-webkit-border-top-left-radius:9px;
+-webkit-border-top-right-radius:9px;
+-moz-border-radius-topleft:9px;
+-moz-border-radius-topright:9px;
+border-top-left-radius:9px;
+border-top-right-radius:9px;
+}
+
+h4 {
+  color: #fff;
+}
+
+.side-center{
+padding: 9px 9px 5px;
+text-align: left;
+}
+
+
+*/
+
+.general-box {
+background-color:#eeeeee;/*fbf80e;*/
+border:1px solid #ffffff;
+list-style:disc;
+padding-left:0px;
+margin:0px 0px 20px 0px;
+}
+
+.market-box {
+background-color:#fffeb6;
+border:1px solid #ffffff;
+list-style:disc;
+padding-left:0px;
+margin:0px 0px 20px 0px;
+}
+
+.round-9 {
+-webkit-border-radius:9px;
+-moz-border-radius:9px;
+border-radius:9px
+}
+
+.side-head {
+background-clip:padding-box;
+background-color:#bed4eb; /*050505;*/
+margin:0px;
+padding:7px;
+text-align:center; 
+-webkit-border-top-left-radius:9px;
+-webkit-border-top-right-radius:9px;
+-moz-border-radius-topleft:9px;
+-moz-border-radius-topright:9px;
+border-top-left-radius:9px;
+border-top-right-radius:9px;
+}
+
+h4 {
+  color: #3274c6;/*fff;*/
+}
+
+.side-center{
+padding: 9px 9px 5px;
+text-align: left;
+}

@@ -1,0 +1,94 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Home{% endblock %}
+	
+	{% block titlecontenido %}{% endblock %}
+	
+	{% block bylinecontenido %}{% endblock %}
+	
+	{% block textlinkbylinecontenido %}textlinkbylinecontenido{% endblock %}
+	
+	{% block contenido %}
+
+<div class="row">
+	    <div class="span3">  		  
+  		  <div class="general-box round-9">
+            <h3 class="side-head">Real/Historicos</h3>
+            <p class="side-center">
+              <ul>
+                <li>
+                  Tabla Tiempo Real y Graficos Tendencias Historicas
+                  <br><br>
+                  <a href="/hist/snapshot">Ingrese &raquo;</a><br>
+                </li>
+              </ul> 
+            </p>
+          </div>
+        </div>
+
+	    <div class="span3">  		  
+  		  <div class="general-box round-9">
+            <h3 class="side-head">Conexiones</h3>
+            <p class="side-center">
+              <ul>
+                <li>
+                  Conexiones con Servidores OPC
+                  <br><br>
+                  <a href="/hist/connect">Ingrese &raquo;</a><br>
+                </li>
+              </ul> 
+            </p>
+          </div>
+        </div>
+
+		<div class="span3">
+          <div class="general-box round-9">
+            <h3 class="side-head">Tag</h3>
+            <p class="side-center">
+              <ul>
+                <li>
+                  Definicion de Variables a Historizar
+                  <br><br>
+                  <a href="/hist/tag">Ingrese &raquo;</a><br>
+                </li>
+              </ul> 
+            </p>
+          </div>
+       </div>
+</div>
+
+<div class="row">
+	    <div class="span3">	  
+  		  <div class="general-box round-9">
+            <h3 class="side-head">Controlador</h3>
+            <p class="side-center">
+              <ul>
+                <li>
+                  Estado de Servicio OpenOPC
+                  <br><br>
+                  <a href="/hist/controller">Ingrese &raquo;</a><br>
+                </li>
+              </ul> 
+            </p>
+          </div>
+        </div>
+
+		<div class="span3">
+          <div class="general-box round-9">
+            <h3 class="side-head">Reportes</h3>
+            <p class="side-center">
+              <ul>
+                <li>
+                  Generacion de Reportes PDF
+                  <br><br>
+                  <a href="/report">Ingrese &raquo;</a><br>
+                </li>
+              </ul> 
+            </p>
+          </div>
+       </div>
+</div>
+	{% endblock %}
+
+	{% block titlecomentcontenido %}titlecomentcontenido{% endblock %}
+	{% block comentcontenido %}comentcontenido{% endblock %}

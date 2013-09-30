@@ -1,0 +1,47 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Tiempo Real OPC{% endblock %}
+	
+	{% block titlecontenido %}Tiempo Real OPC{% endblock %}
+	
+	{% block bylinecontenido %}Informacion Tiempo Real{% endblock %}
+	
+	{% block textlinkbylinecontenido %}OpenAutomation{% endblock %}
+	
+	{% block contenido %}
+	<body>
+		<!--<div id="table_div" style="height: 320px; width: 900px; color: #000000; font-size: 12pt" ></div>-->
+		<div id="table"></div>
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript">google.load('visualization', '1', {packages: ['table']});</script>
+		<script type="text/javascript">
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();
+					data.addColumn('string', 'Name');
+					data.addColumn('string', 'Value');
+					data.addColumn('string', 'Quality');
+					data.addColumn('string', 'Datetime');
+					data.addColumn('string', 'History');
+					data.addColumn('string', 'Acciones');
+					data.addRows({{ qs|length }});					
+					{% for s in qs %}
+						data.setCell({{ forloop.counter0 }}, 0, '{{ s.name }}'); 
+						data.setCell({{ forloop.counter0 }}, 1, '{{ s.value }}');
+						data.setCell({{ forloop.counter0 }}, 2, '{{ s.quality }}');
+						data.setCell({{ forloop.counter0 }}, 3, '{{ s.pub_date|date:"d-M-Y H:i:s"}}');
+						data.setCell({{ forloop.counter0 }}, 4, '{{ s.history }}');
+						data.setCell({{ forloop.counter0 }}, 5, '{{ s.id }}'); 
+					{% endfor %}
+					var formatter = new google.visualization.PatternFormat('<a href="/hist/snapshot/{0}" class="btn btn-small btn-success">Grafico Tendencia</a> <a href="/hist/trend/edit/{0}" class="btn btn-small btn-warning">Parametros Carta</a>');
+					formatter.format(data, [5, 1]); // Apply formatter and set the formatted value of the first column.
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, {allowHtml: true, showRowNumber: false});
+			}
+			google.setOnLoadCallback(drawVisualization);
+		</script>
+	</body>
+	{% endblock %}
+
+	{% block titlecomentcontenido %}Tabla Tiempo Real OPC{% endblock %}
+	{% block comentcontenido %}Acceso a Graficos de Tendencia Historicos para cada Tag{% endblock %}
+

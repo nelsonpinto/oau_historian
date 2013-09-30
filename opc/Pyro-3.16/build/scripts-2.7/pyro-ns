@@ -1,0 +1,5 @@
+#!/usr/bin/python
+
+import sys
+import Pyro.naming
+Pyro.naming.main(sys.argv[1:])

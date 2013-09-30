@@ -1,0 +1,43 @@
+{% extends "starter-template.html" %}
+
+	{% block title %}Reportes{% endblock %}
+	
+	{% block titlecontenido %}Sistema de Reportes{% endblock %}
+	
+	{% block bylinecontenido %}Diseñado por Open Automation{% endblock %}
+	
+	{% block textlinkbylinecontenido %} Open Automation{% endblock %}
+	
+	{% block contenido %}
+
+	<body>
+		<!--<div id="table_div" style="height: 560px; width: 850px; color: #000000; font-size: 12pt" ></div>-->
+		<div id="table"></div>	
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript">google.load('visualization', '1', {packages: ['table']});</script>
+		<script type="text/javascript">
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();
+					data.addColumn('string', 'Name');
+					data.addColumn('string', 'Type');
+					data.addColumn('string', 'Source');
+					data.addColumn('string', 'Acciones');
+					data.addRows({{ qs|length }});					
+					{% for s in qs %}
+						data.setCell({{ forloop.counter0 }}, 0, '{{ s.name }}');
+						data.setCell({{ forloop.counter0 }}, 1, '{{ s.datatype }}');
+						data.setCell({{ forloop.counter0 }}, 2, '{{ s.source }}');
+						data.setCell({{ forloop.counter0 }}, 3, '{{ s.id }}'); 						
+					{% endfor %}
+					var formatter = new google.visualization.PatternFormat('<a href="/report/generar/{0}" class="btn btn-small btn-warning">Generar</a>');
+					formatter.format(data, [3, 1]); // Apply formatter and set the formatted value of the first column.		
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, {allowHtml: true});
+			}
+			google.setOnLoadCallback(drawVisualization);
+		</script>
+	</body>
+
+	{% endblock %}
+	{% block titlecomentcontenido %}Sistema de Reportes {% endblock %}
+	{% block comentcontenido %}Se podra generar el o los reportes manuales y automaticos del sistema de historicos {% endblock %}

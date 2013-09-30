@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+	{% block title %}Pagina de Inicio{% endblock %}
+	 
+	{% block titlecontenido %}Pagina de Inicio{% endblock %}
+	
+	{% block bylinecontenido %}Diseñado por OpenAutomation{% endblock %}
+	
+	{% block textlinkbylinecontenido %}Open Automation{% endblock %}
+	
+	{% block contenido %}
+	<body>
+		<div id="table"></div>	
+		<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript">
+			google.load('visualization', '1', {packages: ['table']});
+		    google.setOnLoadCallback(drawVisualization);
+
+			function drawVisualization() {
+				var data = new google.visualization.DataTable();
+
+					data.addColumn('string', 'Usuarios');
+					data.addColumn('string', 'Nombre');
+					data.addColumn('string', 'Apellido');
+					
+					data.addRows({{ qs|length }});
+					
+					{% for s in qs %}  
+						data.setCell({{ forloop.counter0 }}, 0, '{{ s.username }}');
+						data.setCell({{ forloop.counter0 }}, 1, '{{ s.first_name }}');
+						data.setCell({{ forloop.counter0 }}, 2, '{{ s.last_name }}');
+					{% endfor %}
+
+				visualization = new google.visualization.Table(document.getElementById('table'));
+				visualization.draw(data, null);
+			}
+			google.setOnLoadCallback(drawVisualization);
+		</script>
+	</body>
+	{% endblock %}
+	
+	{% block titlecomentcontenido %}Pagina de Inicio {% endblock %}
+	{% block comentcontenido %}Sirvase a iniciar sesion o registrarse como usuario {% endblock %}

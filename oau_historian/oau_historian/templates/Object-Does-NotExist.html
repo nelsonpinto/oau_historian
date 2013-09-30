@@ -1,0 +1,27 @@
+{% extends "object-template.html" %}
+
+	{% block title %}No Existe Objeto{% endblock %}
+
+  {% block titlecontenido %}No Existe Objeto{% endblock %}  
+  
+  {% block contenido %}
+
+    {% for s in qs %}
+      <abbr title="Mensaje">{{ s.msg }}</abbr>  
+    {% endfor %}
+
+  {% endblock %}
+
+  {% block acciones %}
+
+    {% for s in qs %}
+      {% if s.href_add_enable %}    
+        <a class="btn btn-small btn-primary" href="{{ s.href_add }}">Agregar</a>       
+      {% endif %}
+    {% endfor %}  
+    
+  {% endblock %} 
+
+  {% block bylinecontenido %}{% endblock %}
+  
+  {% block textlinkbylinecontenido %}OpenAutomation{% endblock %}
